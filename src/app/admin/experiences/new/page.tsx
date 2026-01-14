@@ -1,0 +1,230 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+
+type LinkItem = { label: string; href: string };
+
+export default function NewExperience() {
+  const router = useRouter();
+  const [type, setType] = useState<"work" | "leadership" | "project">("work");
+  const [title, setTitle] = useState("");
+  const [org, setOrg] = useState("");
+  const [period, setPeriod] = useState("");
+  const [summary, setSummary] = useState("");
+  const [highlights, setHighlights] = useState("");
+  const [tags, setTags] = useState("");
+  const [links, setLinks] = useState<LinkItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleAddLink = () => {
+    setLinks([...links, { label: "", href: "" }]);
+  };
+
+  const handleUpdateLink = (idx: number, field: "label" | "href", value: string) => {
+    const newLinks = [...links];
+    newLinks[idx] = { ...newLinks[idx], [field]: value };
+    setLinks(newLinks);
+  };
+
+  const handleRemoveLink = (idx: number) => {
+    setLinks(links.filter((_, i) => i !== idx));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const response = await fetch("/api/experiences", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type,
+          title,
+          org,
+          period,
+          summary,
+          highlights: highlights.split(",").map((h) => h.trim()).filter(Boolean),
+          tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
+          links: links.filter((l) => l.label && l.href),
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to create experience");
+      }
+
+      router.push("/admin/experiences");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create experience");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-black p-6">
+      <div className="mx-auto max-w-3xl">
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-white">New Experience</h1>
+            <p className="mt-1 text-sm text-zinc-400">Add an experience item to your timeline.</p>
+          </div>
+          <Link href="/admin/experiences" className="text-sm text-zinc-300 hover:text-white">
+            Back
+          </Link>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-white">Type</label>
+                <select
+                  value={type}
+                  onChange={(e) => setType(e.target.value as "work" | "leadership" | "project")}
+                  className="w-full rounded-lg border border-white/10 bg-black/40 px-4 py-2 text-sm text-zinc-200 outline-none focus:border-white/20"
+                >
+                  <option value="work">Work</option>
+                  <option value="leadership">Leadership</option>
+                  <option value="project">Project</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-white">Period</label>
+                <input
+                  type="text"
+                  value={period}
+                  onChange={(e) => setPeriod(e.target.value)}
+                  className="w-full rounded-lg border border-white/10 bg-black/40 px-4 py-2 text-sm text-zinc-200 outline-none focus:border-white/20"
+                  placeholder="Jan 2024 — Present"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-white">Title</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full rounded-lg border border-white/10 bg-black/40 px-4 py-2 text-sm text-zinc-200 outline-none focus:border-white/20"
+                  placeholder="e.g. Senior Backend Engineer"
+                  required
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-white">Organization</label>
+                <input
+                  type="text"
+                  value={org}
+                  onChange={(e) => setOrg(e.target.value)}
+                  className="w-full rounded-lg border border-white/10 bg-black/40 px-4 py-2 text-sm text-zinc-200 outline-none focus:border-white/20"
+                  placeholder="e.g. Acme Inc."
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white">Summary</label>
+              <textarea
+                value={summary}
+                onChange={(e) => setSummary(e.target.value)}
+                rows={3}
+                className="w-full rounded-lg border border-white/10 bg-black/40 px-4 py-2 text-sm text-zinc-200 outline-none focus:border-white/20"
+                placeholder="Describe your role and key responsibilities…"
+                required
+              />
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-white">Highlights (comma separated)</label>
+                <input
+                  type="text"
+                  value={highlights}
+                  onChange={(e) => setHighlights(e.target.value)}
+                  className="w-full rounded-lg border border-white/10 bg-black/40 px-4 py-2 text-sm text-zinc-200 outline-none focus:border-white/20"
+                  placeholder="Built X, Improved Y, Led Z"
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-white">Tags (comma separated)</label>
+                <input
+                  type="text"
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
+                  className="w-full rounded-lg border border-white/10 bg-black/40 px-4 py-2 text-sm text-zinc-200 outline-none focus:border-white/20"
+                  placeholder="Next.js, Security, Leadership"
+                />
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <label className="block text-sm font-semibold text-white">Links</label>
+                <button
+                  type="button"
+                  onClick={handleAddLink}
+                  className="rounded-lg border border-white/10 bg-black/20 px-3 py-1 text-xs text-zinc-300 hover:bg-white/10"
+                >
+                  Add Link
+                </button>
+              </div>
+
+              {links.length > 0 ? (
+                <div className="space-y-3">
+                  {links.map((link, idx) => (
+                    <div key={idx} className="flex flex-col gap-2 rounded-lg border border-white/10 bg-black/20 p-4 md:flex-row md:gap-3">
+                      <input
+                        type="text"
+                        value={link.label}
+                        onChange={(e) => handleUpdateLink(idx, "label", e.target.value)}
+                        className="flex-1 rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-zinc-200 outline-none focus:border-white/20"
+                        placeholder="Label (e.g. Live, GitHub)"
+                      />
+                      <input
+                        type="text"
+                        value={link.href}
+                        onChange={(e) => handleUpdateLink(idx, "href", e.target.value)}
+                        className="flex-1 rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-zinc-200 outline-none focus:border-white/20"
+                        placeholder="https://…"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveLink(idx)}
+                        className="rounded-lg bg-red-900/20 px-3 py-2 text-xs font-semibold text-red-300 hover:bg-red-900/30"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            {error && (
+              <div className="rounded-lg border border-red-900/50 bg-red-900/20 p-4 text-sm text-red-300">{error}</div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-lg bg-linear-to-r from-sky-500 to-indigo-500 px-4 py-3 font-semibold text-white hover:opacity-95 disabled:opacity-50"
+            >
+              {loading ? "Creating…" : "Create Experience"}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
