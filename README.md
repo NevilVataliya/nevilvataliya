@@ -21,7 +21,7 @@ I engineer secure, scalable backend systems and intelligent ML pipelines. Blendi
 * 🎓 B.Tech CSE student at **SVNIT, Surat**.
 * 🚀 **Head of Web Development** for Mindbend (SVNIT TechFest), leading architecture and delivery for 1,000+ attendees.
 * 🛡️ Ranked **Top 7% globally** on TryHackMe, actively practicing OWASP web exploitation and Linux hardening.
-* 🏆 Secured **Runner-Up** out of 300+ teams at Hack The Tank 3.0.
+* 🏆 Secured **Runner-Up** out of 300+ teams at Hack The Tank 3.0  and 2nd Runner-Up at Codecraft.
 
 ---
 
